@@ -1,15 +1,11 @@
-function pickDependencies(moduleNames, allModules) {
-    let depPicked = {};
-
-    moduleNames.forEach(name => {
+function pickDeps(moduleNames, allModules) {
+    return moduleNames.map(name => {
         if (allModules[name]) {
-            depPicked[name] = allModules[name];
+            return allModules[name];
         } else {
             throw new Error(`${name} cannot be resolved`);
         }
     });
-
-    return depPicked;
 }
 
 function resolveMap(aMap) {
@@ -20,9 +16,7 @@ function resolveMap(aMap) {
             promise: null,
             value: null,
         };
-        singleResolver.promise = aMap[key].then(value => {
-            singleResolver.value = value;
-        });
+        singleResolver.promise = aMap[key].then(v => singleResolver.value = v);
         resolvers.push(singleResolver);
     }
 
@@ -33,13 +27,13 @@ function resolveMap(aMap) {
     });
 }
 
-function resolveDependencies(modulesNames = [], allModules) {
+function resolveDeps(modulesNames, allModules) {
     if (modulesNames.length === 0) {
-        return Promise.resolve({});
+        return Promise.resolve([]);
     }
 
     try {
-        return resolveMap(pickDependencies(modulesNames, allModules));
+        return Promise.all(pickDeps(modulesNames, allModules));
     } catch (e) {
         return Promise.reject(e.message);
     }
@@ -67,41 +61,58 @@ function getClonedInjector(modulesRepository) {
 }
 
 /**
+ * Returns an Array of strings for a string with comma separated values
+ * @param {string|string[]} injects
+ * @returns {string[]}
+ */
+function normalizeInjects(injects) {
+    if (typeof injects === 'string') {
+        return injects
+            .split(',')
+            .map(s => s.trim())
+            .filter(s => !!s);
+    } else if (typeof injects === 'object' && injects instanceof Array) {
+        return injects;
+    }
+
+    return [];
+}
+
+/**
  *
  * @param {string} moduleName
- * @param {string} moduleInjects
+ * @optional
+ * @param {string|string[]} moduleInjects
  * @param {function} moduleDefinition
- * @returns {*}
+ * @returns {function}
  */
 function ddi(moduleName,
              moduleInjects,
              moduleDefinition) {
 
+    /** @type {Array} */
+    let moduleInjectsNormalized;
+
     if (typeof moduleInjects === 'function') {
         moduleDefinition = moduleInjects;
-        moduleInjects = moduleDefinition.$inject || '';
+        moduleInjectsNormalized = normalizeInjects(moduleDefinition.$inject);
+    } else {
+        moduleInjectsNormalized = normalizeInjects(moduleInjects);
     }
 
     function ddiGetter(modulesRepository = {}) {
 
-        let deps = resolveDependencies(
-            moduleInjects
-                .split(',')
-                .filter(s => !!s)
-                .map(s => s.trim()),
+        let deps = resolveDeps(
+            moduleInjectsNormalized,
             modulesRepository
         );
 
-        if (ddi.logger) {
-            deps.catch(error => ddi.logger.error(error));
-        }
+        ddi.logger && deps.catch(error => ddi.logger.error(error));
 
         modulesRepository[moduleName] = deps
-            .then(resolvedDeps => moduleDefinition(resolvedDeps));
+            .then(resolvedDeps => moduleDefinition.apply(null, resolvedDeps));
 
-        let injector = getInjector(modulesRepository);
-
-        return injector;
+        return getInjector(modulesRepository);
 
     };
 
