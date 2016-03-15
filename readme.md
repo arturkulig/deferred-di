@@ -23,7 +23,7 @@ inject(A);
 inject(B);
 inject(C);
 // all are launched on injection
-inject.then(({A,B,C}) => {
-	console.log(A, B, C); // 5 2 7
+inject.then(({moduleA, moduleB, moduleC}) => {
+	console.log(moduleA, moduleB, moduleC); // 5 2 7
 });
 ```
