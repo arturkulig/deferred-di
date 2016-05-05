@@ -18,12 +18,14 @@ const C = ddi(
 ## module injection
 ```javascript
 // continuing above
-const inject = ddi.inject();
-inject(A);
-inject(B);
-inject(C);
-// all are launched on injection
-inject.then(({moduleA, moduleB, moduleC}) => {
-	console.log(moduleA, moduleB, moduleC); // 5 2 7
-});
+// so we have A,B,C with module definitions
+ddi.inject() // <-- this returns a function
+    (A)
+    (B)
+    (C)
+    // every injection function
+    // exposes then and catch as promise
+    .then(({moduleA, moduleB, moduleC}) => {
+	    console.log(moduleA, moduleB, moduleC); // 5 2 7
+    });
 ```

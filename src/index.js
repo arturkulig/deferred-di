@@ -40,24 +40,18 @@ function resolveDeps(modulesNames, allModules) {
 }
 
 function getInjector(modulesRepository = {}) {
-    let injector = function injector(nextModuleGetter) {
-        return nextModuleGetter(modulesRepository);
-    };
-
-    injector.modules = modulesRepository;
-    injector.clone = () => getClonedInjector(modulesRepository);
-
-    injector.then = (success, failure) => resolveMap(modulesRepository).then(success, failure);
-    injector.catch = (failure) => resolveMap(modulesRepository).catch(failure);
-
-    return injector;
-}
-
-function getClonedInjector(modulesRepository) {
-    let clonedRepository = {
+    const clonedRepository = {
         ...modulesRepository,
     };
-    return getInjector(clonedRepository);
+
+    let injector = function injector(nextModuleGetter) {
+        return nextModuleGetter(clonedRepository);
+    };
+
+    injector.then = (success, failure) => resolveMap(clonedRepository).then(success, failure);
+    injector.catch = (failure) => resolveMap(clonedRepository).catch(failure);
+
+    return injector;
 }
 
 /**
@@ -120,7 +114,7 @@ function ddi(moduleName,
 
 }
 
-ddi.injector = ddi.inject = getInjector;
+ddi.inject = ddi.getInjector = getInjector;
 
 ddi.logger = null;
 

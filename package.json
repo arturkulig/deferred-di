@@ -5,14 +5,14 @@
   "main": "dist/deferred-di.js",
   "jsnext:main": "src/index.js",
   "scripts": {
-    "test": "$(npm bin)/karma start",
-    "test_once": "$(npm bin)/karma start --single-run",
-    "start": "$(npm bin)/webpack --watch",
-    "build": "npm run fix && $(npm bin)/webpack",
-    "preversion": "npm run build && git add -A && git commit -m \"build\";",
+    "test": "NODE_ENV=testing $(npm bin)/karma start",
+    "test_once": "NODE_ENV=testing $(npm bin)/karma start --single-run",
+    "start": "NODE_ENV=testing $(npm bin)/webpack --watch",
+    "build": "NODE_ENV=production $(npm bin)/webpack",
+    "preversion": "npm run build; git add -A; git commit -m \"build\";",
     "fix:src": "$(npm bin)/jscs --fix src/*.js",
     "fix:tests": "$(npm bin)/jscs --fix tests/*.js",
-    "fix": "npm run fix:src && npm run fix:tests"
+    "fix": "npm run fix:src; npm run fix:tests;"
   },
   "author": "Artur Kulig",
   "license": "MIT",

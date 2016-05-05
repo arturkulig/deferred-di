@@ -25,6 +25,7 @@ describe('ddi', function () {
         }).not.toThrow();
     });
 
+    // TODO split inject styles
     it('can inject', function (done) {
         let m1a = ddi('m1a', () => 5);
 
@@ -50,41 +51,38 @@ describe('ddi', function () {
             done();
         });
 
-        let inject = ddi.inject();
-        inject(m1a);
-        inject(m1b);
-        inject(m2);
-        inject(tester);
+        ddi.inject()
+            (m1a)
+            (m1b)
+            (m2)
+            (tester)
+        ;
     });
 
     it('has then function in case of a success', function (done) {
         let m1 = ddi('m1', () => 5);
         let m2 = ddi('m2', () => new Promise(resolve => setTimeout(()=>resolve(2), 16)));
 
-        let inject = ddi.inject();
-        inject(m1);
-        inject(m2);
-        inject.then(({ m1, m2 }) => {
-            expect(m1).toBe(5);
-            expect(m2).toBe(2);
-            done();
-        });
+        ddi.inject()
+            (m1)
+            (m2)
+            .then(({ m1, m2 }) => {
+                expect(m1).toBe(5);
+                expect(m2).toBe(2);
+                done();
+            })
+        ;
     });
-
-    //it('allows injection in ng style', function (done) {
-    //    let m1 = ddi('m1', () => 5);
-    //    let m2def = m2 => m2 + 2;
-    //    m2def.$inject =
-    //});
 
     it('has catch function in case of a failure', function (done) {
         let m1 = ddi('m1', () => 5);
         let m2 = ddi('m2', 'm3', () => new Promise(resolve => setTimeout(()=>resolve(2), 16)));
 
-        let inject = ddi.inject();
-        inject(m1);
-        inject(m2);
-        inject.catch(done);
+        ddi.inject()
+            (m1)
+            (m2)
+            .catch(done)
+        ;
     });
 });
 
